@@ -10,6 +10,8 @@
 # CHG rainfall:  http://chg.geog.ucsb.edu/data/chirps/
 # CRU rainfall:  http://www.cru.uea.ac.uk/data
 
+
+
 library(shiny)
 
 library(chron)
@@ -830,17 +832,75 @@ slp_feature<-reactive({
  
 ##
 
-output$summary_GLM <- renderPrint({
+output$summary <- renderPrint({
 
      slp1=slp_feature()
      sst1=sst_feature()
  
     rain<-pcp()[month_indicespredictand()]
     pcp=data.frame('slp'=slp1,'sst'=sst1, 'rainfall'=rain)
-    summary(glm(rainfall ~. , data=pcp,family = gaussian))
+    
+    inTrain <- createDataPartition(y=pcp$rainfall, p=0.6, list=FALSE)
+    training <- pcp[inTrain,]
+    testing <- pcp[-inTrain,]
+    modelFit <- train(rainfall ~.,data=training, method="glm",preProcess=c("center", "scale"))
+    predictions <- predict(modelFit,newdata=testing)
+    summary(modelFit)
 })
 
+##
 
+output$fitpred <- renderPlot({
+    
+    slp1=slp_feature()
+    sst1=sst_feature()
+    
+    rain<-pcp()[month_indicespredictand()]
+    pcp=data.frame('slp'=slp1,'sst'=sst1, 'rainfall'=rain)
+    
+    inTrain <- createDataPartition(y=pcp$rainfall, p=0.6, list=FALSE)
+    training <- pcp[inTrain,]
+    testing <- pcp[-inTrain,]
+    modelFit <- train(rainfall ~., data=training, method="glm",preProcess=c("center", "scale"))
+    predictions <- predict(modelFit,newdata=testing)
+    
+    pcp_train=data.frame('fitted'=modelFit$finalModel$fitted.values,'observed'=training$rainfall)
+    
+    pcp_test=data.frame('predicted'=predictions,'observed'=testing$rainfall)
+    
+    cols <- c("Training"="blue","Testing"="red")
+    
+    ggplot(pcp_train, aes(x=fitted, y=observed,color='Training')) +
+        geom_point(pch=18,size=3)+
+        geom_point(data = pcp_test,aes(x=predicted, y=observed,colour = "Testing"))+ylab("Observation")+
+        xlab("model")+ ggtitle('Observation Vs Model')+ theme(plot.title = element_text(size = 18,colour="black"))+
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+        scale_colour_manual(name=" ",values=cols)+
+        theme(axis.title.y = element_text(colour="grey20",size=14,angle=90,hjust=.5,vjust=1),
+              axis.text.y = element_text(colour="grey20",size=14,angle=0,hjust=1,vjust=0),
+              axis.text.x = element_text(colour="grey20",size=14,angle=60,hjust=.5,vjust=.5))
+    
+    
+    })
+
+
+output$qqplot <- renderPlot({
+    
+    slp1=slp_feature()
+    sst1=sst_feature()
+    
+    rain<-pcp()[month_indicespredictand()]
+    pcp=data.frame('slp'=slp1,'sst'=sst1, 'rainfall'=rain)
+    
+    inTrain <- createDataPartition(y=pcp$rainfall, p=0.6, list=FALSE)
+    training <- pcp[inTrain,]
+    testing <- pcp[-inTrain,]
+    modelFit <- train(rainfall ~., data=training, method="glm",preProcess=c("center", "scale"))
+    
+    par(mfrow=c(2,2))
+    plot(modelFit$finalModel)
+    
+})
 
 
 })

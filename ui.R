@@ -9,7 +9,7 @@ shinyUI(fluidPage(
         sidebarPanel( 
             
             selectInput("help", 
-                        label = em("Help",style="color:#004700;background-color:#FFFFB2"),
+                        label = em("Help",style="color:#004700"),
                         choices = c("Summary", "Video","Datasets","--"),
                         selected = "--",selectize=FALSE),
                           
@@ -18,7 +18,7 @@ shinyUI(fluidPage(
             
         
                        
-            h4(strong(em("Predictand",style="color:blue;background-color:#D6C2AD;text-align:center"))),
+            h4(strong(em("Predictand",style="color:blue;text-align:center"))),
                       selectInput("dataset", 
                                   label = "Choose Dataset",
                                   choices = c("CHIRPS", "CRU","--"),
@@ -96,7 +96,7 @@ shinyUI(fluidPage(
     selectInput("pwind", 
                 label = strong("Select Pressure Level for wind",style="color:#CC0000;background-color:lightgrey"),
                 choices = c("--","1000", "925","850","700","600","500","400","300","250","200","150"),
-                selected = "--",,selectize=FALSE,multiple=TRUE),
+                selected = "--",selectize=FALSE,multiple=TRUE),
     
     br(),
     
@@ -140,6 +140,12 @@ shinyUI(fluidPage(
                 choices = c("GLM", "SGLM","GAM","SGAM","Bagging","RF","Boosting","SVM","ANN","MARS","ALL"),
                 selected = "ALL",selectize=FALSE,multiple=TRUE,size=12),
     
+    br(),
+    
+    selectInput("overview", 
+                label = em("Quick Overview of Model Reults",style="color:#004700"),
+                choices = c("Summary", "TrainTest","ModelPlot","--"),
+                selected = "--",selectize=FALSE),
     br(),
     
     actionButton("submit",em(strong("Submit",style="color:blue;background-color:#FFFF66;font-size:120%"))),
@@ -189,7 +195,7 @@ shinyUI(fluidPage(
                   # map for zooming in and region selection
             plotOutput("selectRegion",dblclick='plot_dblclick', click = "plot_click",width = "100%", height = "400px"),
             
-            
+        
             
         
     ## Summary of rainfall over selected region: start
@@ -231,19 +237,19 @@ shinyUI(fluidPage(
   ## models summary: start
   
   conditionalPanel(
-      condition = "input.models == 'GLM'",
+      condition = "input.overview == 'Summary'",
       
-      verbatimTextOutput("summary_GLM")),
+      verbatimTextOutput("summary")),
+  
   
   conditionalPanel(
-      condition = "input.models == 'SGLM'",
-      
-      verbatimTextOutput("summary_SGLM")),
+      condition = "input.overview == 'TrainTest'",
+      plotOutput("fitpred")),
   
   conditionalPanel(
-      condition = "input.models == 'RF'",
-      
-      verbatimTextOutput("summary_RF"))
+      condition = "input.overview == 'ModelPlot'",
+      plotOutput("qqplot"))
+  
   
   
   ## models summary: end
