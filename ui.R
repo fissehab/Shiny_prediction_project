@@ -24,7 +24,7 @@ shinyUI(fluidPage(
                                   choices = c("CHIRPS", "CRU","--"),
                                   selected = "--"),
             
-            fileInput('file1', strong('Upload Predictand',style="color:blue;background-color:#D6C2AD"),
+            fileInput('file1', strong('Upload Predictand',style="color:blue"),
                       accept=c('text/csv','text/comma-separated-values,text/plain', '.csv')),
             
                       
@@ -36,9 +36,7 @@ shinyUI(fluidPage(
                       br(),
                       
                       
-                      
-    #tags$hr(style="height:1.5px;border:none;color:#66FF66;background-color:#B2B299"),
-                      
+                  
     
     selectInput("pcpstat", 
                 label = em("Precipitation Over Selected Region",style="font-size:14px;color:darkblue"),
@@ -47,12 +45,10 @@ shinyUI(fluidPage(
                   
       br(), 
     
-    
-    #tags$hr(style="height:1.5px;border:none;color:#66FF66;background-color:#B2B299"),
-     
+   
     
     selectInput("months", 
-                label = em("Select Months of Interest",style="color:#004700;background-color:#FFFFB2"),
+                label = em("Select Months of Interest",style="color:#004700"),
                 choices = c("January", "February","March","April","May","June","July","August","September","October","November","December"),
                 selected = "January",selectize=FALSE,multiple=TRUE),
     
@@ -141,8 +137,8 @@ shinyUI(fluidPage(
     h4(strong(tags$u(em("Select Algorithms",style="color:blue;background-color:#FFFF66")))),
     selectInput("models", 
                 label = "",
-                choices = c("GLM", "SGLM","GAM","SGAM","Bagging","RF","Boosting","SVM","RVM","ANN","MARS","ALL"),
-                selected = "ALL",selectize=FALSE,multiple=TRUE),
+                choices = c("GLM", "SGLM","GAM","SGAM","Bagging","RF","Boosting","SVM","ANN","MARS","ALL"),
+                selected = "ALL",selectize=FALSE,multiple=TRUE,size=12),
     
     br(),
     
@@ -168,9 +164,9 @@ shinyUI(fluidPage(
         
         mainPanel(
              br(),
-            h5(em(strong("Semi-Automated Interactive Prediction Models",style="color:darkblue;font-size:210%;text-align:center"))),
+            h5(em(strong("Semi-Automated Interactive Prediction Models", style="color:darkblue;font-size:210%")),align = "center"),
             
-            ## help: start
+        ## help: start
             
             conditionalPanel(
                  condition = "input.help == 'Summary'",
@@ -188,52 +184,70 @@ shinyUI(fluidPage(
             tableOutput("dataatt")),
             
             
-            ## help: end
-    
+        ## help: end
+        
+                  # map for zooming in and region selection
             plotOutput("selectRegion",dblclick='plot_dblclick', click = "plot_click",width = "100%", height = "400px"),
             
             
             
         
-            ## pcp over selected region: start
+    ## Summary of rainfall over selected region: start
             
             conditionalPanel(
-                condition = "input.pcpstat == 'Climatology'",
-                
+                condition = "input.pcpstat == 'Climatology'", 
+                       # rainfall climatology
                 plotOutput('climatology',width = "100%", height = "400px")),
             
             conditionalPanel(
                 condition = "input.pcpstat == 'Trend'",
-                
+                      #trend of rainfall over selected region
                 plotOutput('trend',width = "100%", height = "400px")),
             
             
             conditionalPanel(
                 condition = "input.pcpstat == 'Boxplot'",
-                
+                      #boxplot of rainfall for selected month(s)
                 plotOutput('boxplot',width = "100%", height = "400px")),
             
-            
+    
             conditionalPanel(
                 condition = "input.pcpstat == 'Histogram'",
-                
+                      #histogram of rainfall for selected month(s)
                 plotOutput('histogram',width = "100%", height = "400px")),
             
-            ## pcp over selected region: end
-            
-            
-            
-            textOutput('hozi'),
-            
-            tableOutput('fish'),
-            #textOutput('bethel'),
-            
-            
-            
+  ## Summary of rainfall over selected region: end
+  
+    
+            #Correlation map of SST with rainfall over selected region
             plotOutput("distPlotsst",dblclick='plot_dblclicksst', click = "plot_clicksst",width = "100%", height = "400px"),
             
-            plotOutput("distPlotslp",dblclick='plot_dblclickslp', click = "plot_clickslp",width = "100%", height = "400px")
+            #Correlation map of SLP with rainfall over selected region
+            plotOutput("distPlotslp",dblclick='plot_dblclickslp', click = "plot_clickslp",width = "100%", height = "400px"),
             
-       
+            
+  
+  
+  ## models summary: start
+  
+  conditionalPanel(
+      condition = "input.models == 'GLM'",
+      
+      verbatimTextOutput("summary_GLM"),
+  
+  conditionalPanel(
+      condition = "input.models == 'SGLM'",
+      
+      verbatimTextOutput("summary_SGLM"),
+  
+  conditionalPanel(
+      condition = "input.models == 'RF'",
+      
+      verbatimTextOutput("summary_RF")
+  
+  
+  ## models summary: end
+  
+  
              ))))
 

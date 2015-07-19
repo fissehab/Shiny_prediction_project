@@ -7,6 +7,7 @@ library(lattice)
 library(lubridate)
 library(ncdf)
 source("lonlat_indices.R")
+source("nearestIndx.R")
 library(ggplot2)
 library(caret)
 
@@ -42,13 +43,13 @@ cru.cdf$dim$TIME$vals -> time_cru
 time_cru<-as.Date(time_cru,origin = "1900-01-01")
 time_cru<-update(time_cru,days=01)
 
-ch.cdf <- open.ncdf("data/chirps_1981_2015_monthly_course.cdf")
-ch <- get.var.ncdf(ch.cdf, "PRE") 
-ch.cdf$dim$LON$vals -> lon_ch
-ch.cdf$dim$LAT$vals -> lat_ch
-ch.cdf$dim$TIME$vals -> time_ch
-time_ch<-as.Date(time_ch,origin = "1980-01-01")
-time_ch<-update(time_ch,days=01)
+#ch.cdf <- open.ncdf("data/chirps_1981_2015_monthly_course.cdf")
+#ch <- get.var.ncdf(ch.cdf, "PRE") 
+#ch.cdf$dim$LON$vals -> lon_ch
+#ch.cdf$dim$LAT$vals -> lat_ch
+#ch.cdf$dim$TIME$vals -> time_ch
+#time_ch<-as.Date(time_ch,origin = "1980-01-01")
+#time_ch<-update(time_ch,days=01)
 
 
 slp.cdf<-open.ncdf("data/slp.mon.mean.nc")
@@ -63,7 +64,7 @@ time_slp = seq(as.Date("1948-01-01"), as.Date("2015-06-30"), by="1 month")
 
 close.ncdf(era.cdf)
 close.ncdf(cru.cdf)
-close.ncdf(ch.cdf)
+close.ncdf(sst.cdf)
 close.ncdf(slp.cdf)
 
 
@@ -396,20 +397,22 @@ endingdatech<-reactive({
  
              if(!is.null(dataset) & length(selected$coords==4)){
                  if(input$dataset=="CRU"){
+                     
      
-     lonl<-which(lon_cru==round(selected$coords[1],0))
-     lonr<-which(lon_cru==round(selected$coords[3],0))
-     lats<-which(lat_cru==round(selected$coords[2],0))
-     latn<-which(lat_cru==round(selected$coords[4],0))
+     lonl<-nearestIndx(selected$coords[1],lon_cru)
+     lonr<-nearestIndx(selected$coords[3],lon_cru)
+     lats<-nearestIndx(selected$coords[2],lat_cru)
+     latn<-nearestIndx(selected$coords[4],lat_cru)
      
      apply(dataset[lonl:lonr,lats:latn,startingdatecru():endingdatecru()],3,mean,na.rm=T)
                  }
     else if(input$dataset=="CHIRPS"){
                      
-      lonl<-which(lon_ch==round(selected$coords[1],0))
-      lonr<-which(lon_ch==round(selected$coords[3],0))
-      lats<-which(lat_ch==round(selected$coords[2],0))
-      latn<-which(lat_ch==round(selected$coords[4],0))
+        lonl<-nearestIndx(selected$coords[1],lon_ch)
+        lonr<-nearestIndx(selected$coords[3],lon_ch)
+        lats<-nearestIndx(selected$coords[2],lat_ch)
+        latn<-nearestIndx(selected$coords[4],lat_ch)
+      
       apply(dataset[lonl:lonr,lats:latn,startingdatech():endingdatech()],3,mean,na.rm=T)
                  }
              }
@@ -461,7 +464,7 @@ output$climatology <- renderPlot({
         
         ggplot(pre, aes(x=months, y=rainfall)) +
             geom_bar(stat="identity", fill="white",color='orange') +
-            geom_text(aes(label=rainfall), vjust=-0.4) +
+            ggtitle('Climatology')+ theme(plot.title = element_text(size = 18,colour="blue"))+
             ylab("Rainfall (mm/month)") +coord_cartesian(ylim=c((min(pre$rainfall)-10),(max(pre$rainfall)+20)))+
             theme(axis.title.x = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))+
             theme(axis.title.y = element_text(colour="grey20",size=14,angle=90,hjust=.5,vjust=1,face="plain"),
@@ -669,7 +672,7 @@ output$histogram <- renderPlot({
  ### SST
  
  ####################
- ##### clicks on SSST map
+ ##### clicks on SST map
  
  selectedsst <- reactiveValues(
      
@@ -761,40 +764,75 @@ output$histogram <- renderPlot({
  
  
  
-##### for bugging purposes
+##### SST feature extraction
  
- output$fish<-renderTable({
-         if (length(selectedsst$coords)>=4 
-                  & length(selectedsst$coords)%%2==0){
-             
-             zsst<-selectedsst$coords
-             
-             sst=c()
-             
-             for (i in seq(1,length(zsst),4)){
-                 a<-zsst[c(i,i+3)]
-                 b<-zsst[c(i+2,i+4)]
-                 
-                 lonl<-which(lon_sst==round(a[1],0))
-                 lonr<-which(lon_sst==round(a[2],0))
-                 lats<-which(lat_sst==round(b[1],0))
-                 latn<-which(lat_sst==round(b[2],0))
-                 
-                 #m=apply(sst[lonl:lonr,lats:latn,month_indicespredictor()],3,mean,na.rm=T)
-                 m=c(lonl,lonr,lats,latn)
-                 sst=cbind(sst,m)
-             }
-
-          sst
-         }
-         })   
+sst_feature<-reactive({
+     if (length(selectedsst$coords)>=4 
+         & length(selectedsst$coords)%%2==0){
+         
+         coordinates<-selectedsst$coords
+         
+         lon_sst_shifted<-ifelse(lon_sst>180 , lon_sst-360, lon_sst)
+         sorted<-sort(lon_sst_shifted)
+         
+         a<-nearestIndx(coordinates[1],sorted )
+         lonl_sst<-which(lon_sst_shifted==sorted[a])
+         
+         a<-nearestIndx(coordinates[3],sorted )
+         lonr_sst<-which(lon_sst_shifted==sorted[a])
+         
+         lats_sst<-nearestIndx(coordinates[2],lat_sst)
+         latn_sst<-nearestIndx(coordinates[4],lat_sst)
+         
+         as.vector(apply(sst[lonl_sst:lonr_sst,lats_sst:latn_sst,month_indicespredictor()],3,mean,na.rm=T))
+          
+     }
+ })  
           
 
+##### SLP feature extraction
+
+slp_feature<-reactive({
+    if (length(selectedslp$coords)>=4 
+        & length(selectedslp$coords)%%2==0){
+        
+        coordinates<-selectedslp$coords
+        
+        lon_slp_shifted<-ifelse(lon_slp>180 , lon_slp-360, lon_slp)
+                   
+        sorted<-sort(lon_slp_shifted)
+        
+        a<-nearestIndx(coordinates[1],sorted )
+        lonl_slp<-which(lon_slp_shifted==sorted[a])
+        
+        a<-nearestIndx(coordinates[3],sorted )
+        lonr_slp<-which(lon_slp_shifted==sorted[a])
+        
+        lats_slp<-nearestIndx(coordinates[2],lat_slp)
+        latn_slp<-nearestIndx(coordinates[4],lat_slp)
+        
+        as.vector(apply(slp[lonl_slp:lonr_slp,lats_slp:latn_slp,month_indicespredictor()],3,mean,na.rm=T))
+        
+    }
+})
  
  
+##
+
+output$summary_GLM <- renderPrint({
+
+     slp1=slp_feature()
+     sst1=sst_feature()
  
- 
- })
+    rain<-pcp()[month_indicespredictand()]
+    pcp=data.frame('slp'=slp1,'sst'=sst1, 'rainfall'=rain)
+    summary(glm(rainfall ~. , data=pcp,family = gaussian))
+})
+
+
+
+
+})
 
  
 
