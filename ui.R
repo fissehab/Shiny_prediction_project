@@ -233,20 +233,21 @@ shinyUI(fluidPage(
   conditionalPanel(
       condition = "input.models == 'GLM'",
       
-      verbatimTextOutput("summary_GLM"),
+      verbatimTextOutput("summary_GLM")),
   
   conditionalPanel(
       condition = "input.models == 'SGLM'",
       
-      verbatimTextOutput("summary_SGLM"),
+      verbatimTextOutput("summary_SGLM")),
   
   conditionalPanel(
       condition = "input.models == 'RF'",
       
-      verbatimTextOutput("summary_RF")
+      verbatimTextOutput("summary_RF"))
   
   
   ## models summary: end
+  
   
   
              ))))

@@ -1,4 +1,15 @@
 
+## Souces of datasets used here
+# 
+# shapefile: http://baruch.cuny.edu/geoportal/data/esri/world/continent.zip
+# 
+# Geopotential: http://apps.ecmwf.int/datasets/data/interim-full-invariant/
+# SST:  http://www.esrl.noaa.gov/psd/data/gridded/data.noaa.oisst.v2.html
+# 
+# SLP, HGT, UWND, VWND, AirT:  http://www.esrl.noaa.gov/psd/data/gridded/data.ncep.reanalysis.html
+# CHG rainfall:  http://chg.geog.ucsb.edu/data/chirps/
+# CRU rainfall:  http://www.cru.uea.ac.uk/data
+
 library(shiny)
 
 library(chron)
