@@ -1,4 +1,3 @@
 # Semi-automated rainfall prediction for any geographic location using Shiny
 
-This is a semi-automated rainfall prediction project that I am developing using various machine learning algorithms.
-Please visit my projects list to read more: http://datascience-enthusiast.com/projects.html
+Here, I used Shiny, which is an R package that makes it easy to build interactive web applications (apps) straight from R, to develop semi-automated machine learning models to predict rainfall over a region the user selects. The user can extract predictand and predictors by drawing a polygon over a region. Then, the user can select some or all of the machine learning algorithms provided. Provided models include Linear regression models (GLM, SGLM), Tree-based models (bagging, random forest, boosting), Support vector Machines, Artificial Neural Network, and other non-linear models (GAM, SGAM, MARS). Finally, the user can download a presentation of the results. Please visit my projects list to read more: http://datascience-enthusiast.com/projects.html
